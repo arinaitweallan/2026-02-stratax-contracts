@@ -572,9 +572,9 @@ contract Stratax is Initializable {
             require(debtTokenPrice > 0 && collateralTokenPrice > 0, "Invalid prices");
 
             // Calculate collateral to withdraw: (debtAmount * debtPrice * collateralDec * LTV_PRECISION) / (collateralPrice * debtDec * ltv)
-            uint256 collateralToWithdraw = (
-                _amount * debtTokenPrice * (10 ** IERC20(unwindParams.collateralToken).decimals()) * LTV_PRECISION
-            ) / (collateralTokenPrice * (10 ** IERC20(_asset).decimals()) * liqThreshold);
+            uint256 collateralToWithdraw =
+                (_amount * debtTokenPrice * (10 ** IERC20(unwindParams.collateralToken).decimals()) * LTV_PRECISION)
+                    / (collateralTokenPrice * (10 ** IERC20(_asset).decimals()) * liqThreshold);
 
             withdrawnAmount = aavePool.withdraw(unwindParams.collateralToken, collateralToWithdraw, address(this));
         }

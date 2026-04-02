@@ -38,8 +38,14 @@ contract StrataxOracle {
      */
     function setPriceFeeds(address[] calldata _tokens, address[] calldata _priceFeeds) external onlyOwner {
         require(_tokens.length == _priceFeeds.length, "Array length mismatch");
-
+        
+        // q what if the _tokens/_priceFeeds array has duplicates?
+        // q what assumption(s) holds at the start of the loop and might not hold
+        // inside the loop?
         for (uint256 i = 0; i < _tokens.length; i++) {
+            // token0 -> feed0
+            // token1 -> feed0
+            // but anyway this is an admin function, so this is a centralisation risk
             _setPriceFeed(_tokens[i], _priceFeeds[i]);
             emit PriceFeedUpdated(_tokens[i], _priceFeeds[i]);
         }
@@ -57,7 +63,7 @@ contract StrataxOracle {
     /**
      * @notice Gets the latest price for a token from Chainlink
      * @param _token The token address
-     * @return price which is has 8 decimals of precision
+     * @return price which is has 8 decimals of precision @info: fix grammar typo
      * @dev Chainlink price feeds that do not have 8 decimals are not supported
      */
 
@@ -67,6 +73,9 @@ contract StrataxOracle {
 
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
 
+        // q what if the price is stale?
+        // q dont we need to enforce max feed age?
+        // q what about the sequencer feed for L2s?
         (, int256 answer,,,) = priceFeed.latestRoundData();
         require(answer > 0, "Invalid price from oracle");
 
@@ -105,6 +114,7 @@ contract StrataxOracle {
 
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddress);
         (roundId, answer, startedAt, updatedAt, answeredInRound) = priceFeed.latestRoundData();
+        // q inst this supposed to take in the roundId?
     }
 
     /**
@@ -114,6 +124,9 @@ contract StrataxOracle {
     function transferOwnership(address _newOwner) external onlyOwner {
         require(_newOwner != address(0), "Invalid address");
         address previousOwner = owner;
+        // q what if owenrship is transfered to a contract that does not implement
+        // functions to call this contracts essential contracts?
+        // q shouldnt we enforce that?
         owner = _newOwner;
         emit OwnershipTransferred(previousOwner, _newOwner);
     }
