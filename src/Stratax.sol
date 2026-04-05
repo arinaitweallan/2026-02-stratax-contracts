@@ -179,6 +179,7 @@ contract Stratax is Initializable {
         address _usdc,
         address _strataxOracle
     ) external initializer {
+        // @best-practices: missing address(0) checks
         aavePool = IPool(_aavePool);
         aaveDataProvider = IProtocolDataProvider(_aaveDataProvider);
         oneInchRouter = IAggregationRouter(_oneInchRouter);
@@ -186,6 +187,8 @@ contract Stratax is Initializable {
         strataxOracle = _strataxOracle;
         owner = msg.sender;
         flashLoanFeeBps = 9; // Default 0.09% Aave flash loan fee
+        // q as if the aave flashloan is lower?
+        // for some loans
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -265,6 +268,7 @@ contract Stratax is Initializable {
     function setStrataxOracle(address _strataxOracle) external onlyOwner {
         require(_strataxOracle != address(0), "Invalid oracle address");
         strataxOracle = _strataxOracle;
+        // @info: missing event
     }
 
     /**
@@ -274,6 +278,7 @@ contract Stratax is Initializable {
     function setFlashLoanFee(uint256 _flashLoanFeeBps) external onlyOwner {
         require(_flashLoanFeeBps < FLASHLOAN_FEE_PREC, "Fee must be < 100%");
         flashLoanFeeBps = _flashLoanFeeBps;
+        // @info: missing event
     }
 
     /**
@@ -282,6 +287,7 @@ contract Stratax is Initializable {
      * @param _amount The amount to recover
      */
     function recoverTokens(address _token, uint256 _amount) external onlyOwner {
+        // @centralization: admin can withdraw user funds using this function
         IERC20(_token).transfer(owner, _amount);
     }
 
@@ -292,6 +298,7 @@ contract Stratax is Initializable {
     function transferOwnership(address _newOwner) external onlyOwner {
         require(_newOwner != address(0), "Invalid address");
         owner = _newOwner;
+        // @info: missing event
     }
 
     /*//////////////////////////////////////////////////////////////
