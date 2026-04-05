@@ -113,10 +113,12 @@ contract Stratax is Initializable {
 
     /// @notice Flash loan fee in basis points (e.g., 9 = 0.09%)
     uint256 public flashLoanFeeBps;
+    // @gas-optimization: pack the variables in one slot
 
     /// @notice Storage gap for future upgrades (reserve space for 50 new state variables)
     /// @dev This prevents storage collisions when adding new state variables in upgrades
     uint256[50] private __gap;
+    // q is the contract upgradeable?
 
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
