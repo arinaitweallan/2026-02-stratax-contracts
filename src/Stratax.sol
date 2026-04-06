@@ -215,6 +215,8 @@ contract Stratax is Initializable {
         require(_initiator == address(this), "Initiator must be this contract");
 
         // Decode operation type
+        // q is it okay to decode the operation type only yet we encoded
+        // three params? dont we need the other encoded params?
         OperationType opType = abi.decode(_params, (OperationType));
 
         if (opType == OperationType.OPEN) {
@@ -320,6 +322,8 @@ contract Stratax is Initializable {
      * @param _oneInchSwapData The calldata from 1inch API to swap borrowed token back to flash loan token
      * @param _minReturnAmount Minimum amount expected from swap (slippage protection)
      */
+
+    // q should the flahloan token be the same as collateral token? [yes, its enforced]
     function createLeveragedPosition(
         address _flashLoanToken,
         uint256 _flashLoanAmount,
@@ -342,6 +346,7 @@ contract Stratax is Initializable {
             minReturnAmount: _minReturnAmount
         });
 
+        // e msg.sender here is owner since the function is access controlled
         bytes memory encodedParams = abi.encode(OperationType.OPEN, msg.sender, params);
 
         // Initiate flash loan
@@ -495,7 +500,8 @@ contract Stratax is Initializable {
     function _executeOpenOperation(address _asset, uint256 _amount, uint256 _premium, bytes calldata _params)
         internal
         returns (bool)
-    {
+    {   
+        // e decode flashloan params
         (, address user, FlashLoanParams memory flashParams) =
             abi.decode(_params, (OperationType, address, FlashLoanParams));
 
@@ -504,8 +510,17 @@ contract Stratax is Initializable {
         IERC20(_asset).approve(address(aavePool), totalCollateral);
         aavePool.supply(_asset, totalCollateral, address(this), 0);
 
+        // USDT
+        // totalCollateral = 1000 + 200 = 1200
+        // supply 1200 to aave
+
         // Store initial balance to verify all borrowed tokens are used in swap
         uint256 prevBorrowTokenBalance = IERC20(flashParams.borrowToken).balanceOf(address(this));
+
+        // USDC
+        // e prevBorrowTokenBalance = 0
+        // borrow 1100
+
         // Step 2: Borrow against the supplied collateral
         aavePool.borrow(
             flashParams.borrowToken,
@@ -521,6 +536,9 @@ contract Stratax is Initializable {
         // Execute swap via 1inch
         uint256 returnAmount =
             _call1InchSwap(flashParams.oneInchSwapData, flashParams.borrowToken, flashParams.minReturnAmount);
+        
+            // e intention here is to swap the borrowed token back to the flashloaned token so that we pay the loan
+            // say we swap 1100 USDC back to USDT, there is swap fee say 0.01% we get back say 1099
 
         // Ensure all borrowed tokens were used in the swap
         uint256 afterSwapBorrowTokenbalance = IERC20(flashParams.borrowToken).balanceOf(address(this));
